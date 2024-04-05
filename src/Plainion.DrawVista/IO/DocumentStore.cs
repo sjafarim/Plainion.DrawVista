@@ -3,9 +3,18 @@ using Plainion.DrawVista.UseCases;
 
 namespace Plainion.DrawVista.IO;
 
-public class DocumentStore(string RootFolder) : IDocumentStore
+public class DocumentStore(string rootFolder) : IDocumentStore
 {
     private readonly object myLock = new object();
+
+    protected virtual void OnStoreChanged()
+    {
+        StoreFilesChanged?.Invoke();
+    }
+
+    public String RootFolder { get; private set; } = rootFolder;
+
+    public event IDocumentStore.Notify StoreFilesChanged;
 
     public IReadOnlyCollection<string> GetPageNames()
     {
@@ -22,8 +31,8 @@ public class DocumentStore(string RootFolder) : IDocumentStore
         lock (myLock)
         {
             var content = File.ReadAllText(ContentFile(pageName));
-            dynamic meta = JsonConvert.DeserializeObject<MetaContent>(File.ReadAllText(MetaFile(pageName)));
-            return new ProcessedDocument(pageName, content, meta.Captions);
+            dynamic meta = JsonConvert.DeserializeObject<MetaContent>(File.ReadAllText(MetaFile(pageName))); 
+            return new ProcessedDocument(pageName, content, meta?.Captions);
         }
     }
 
@@ -37,8 +46,12 @@ public class DocumentStore(string RootFolder) : IDocumentStore
         lock (myLock)
         {
             File.WriteAllText(ContentFile(document.Name), document.Content);
-            var meta = new MetaContent(document.Captions.ToList());
+            var meta = new MetaContent(document.Captions?.ToList());
             File.WriteAllText(MetaFile(document.Name), JsonConvert.SerializeObject(meta));
+        }
+        if (!document.Name.Equals("index"))
+        {
+            OnStoreChanged();
         }
     }
 

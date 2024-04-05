@@ -1,4 +1,9 @@
+using Plainion.DrawVista.IO;
 using Plainion.DrawVista.UseCases;
+using SkiaSharp;
+using Svg.Skia;
+using System.Reflection.Metadata;
+using System.Xml.Linq;
 
 namespace Plainion.DrawVista.Adapters;
 
@@ -8,6 +13,21 @@ public class DocumentStoreCachingDecorator(IDocumentStore impl) : IDocumentStore
         .GetPageNames()
         .Select(impl.GetPage)
         .ToDictionary(x => x.Name);
+
+    protected virtual void OnStoreChanged()
+    {
+        StoreFilesChanged?.Invoke();
+    }
+
+    public event IDocumentStore.Notify StoreFilesChanged;
+
+    public string RootFolder
+    {
+        get
+        {
+            return impl.RootFolder;
+        }
+    }
 
     public void Clear()
     {
@@ -24,6 +44,17 @@ public class DocumentStoreCachingDecorator(IDocumentStore impl) : IDocumentStore
     public void Save(ProcessedDocument document)
     {
         impl.Save(document);
+        CachedDocument(document);
+        if (!document.Name.Equals("index"))
+        {
+            OnStoreChanged();
+        }
+    }
+
+    private void CachedDocument(ProcessedDocument document)
+    {
         myCache[document.Name] = document;
     }
+
+    
 }
