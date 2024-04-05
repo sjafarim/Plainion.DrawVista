@@ -1,3 +1,4 @@
+using Plainion.DrawVista.Adapters;
 using Plainion.DrawVista.IO;
 using Plainion.DrawVista.UseCases;
 
@@ -32,5 +33,41 @@ public class DocumentStoreTests
         var document = store.GetPage("Page-1");
 
         Assert.That(document.Captions, Is.EquivalentTo(new[] { "caption-1", "caption-2" }));
+    }
+
+    [Test]
+    public void SaveTriggersOnStoreCHangedEvent()
+    {
+        var store = new DocumentStore(myRootFolder);
+        var wasCalled = false;
+        store.StoreFilesChanged += delegate { wasCalled = true; };
+
+        store.Save(new ProcessedDocument("Page-1", "Some dummy content", ["caption-1", "caption-2"]));
+
+        Assert.IsTrue(wasCalled);
+    }
+
+    [Test]
+    public void SaveIndexDoesNotTriggerOnStoreCHangedEvent()
+    {
+        var store = new DocumentStore(myRootFolder);
+        var wasCalled = false;
+        store.StoreFilesChanged += delegate { wasCalled = true; };
+
+        store.Save(new ProcessedDocument("index", "Some dummy content", ["caption-1", "caption-2"]));
+
+        Assert.IsFalse(wasCalled);
+    }
+
+    [Test]
+    public void ClearDoesNotTriggersOnStoreCHangedEvent()
+    {
+        var store = new DocumentStore(myRootFolder);
+        var wasCalled = false;
+        store.StoreFilesChanged += delegate { wasCalled = true; };
+
+        store.Clear();
+
+        Assert.IsFalse(wasCalled);
     }
 }

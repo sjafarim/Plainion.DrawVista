@@ -9,6 +9,20 @@ public class DocumentStoreCachingDecorator(IDocumentStore impl) : IDocumentStore
         .Select(impl.GetPage)
         .ToDictionary(x => x.Name);
 
+    public event Action StoreFilesChanged;
+
+    public string RootFolder
+    {
+        get
+        {
+            return impl.RootFolder;
+        }
+    }
+    private void OnStoreChanged()
+    {
+        StoreFilesChanged?.Invoke();
+    }
+
     public void Clear()
     {
         myCache.Clear();
@@ -25,5 +39,9 @@ public class DocumentStoreCachingDecorator(IDocumentStore impl) : IDocumentStore
     {
         impl.Save(document);
         myCache[document.Name] = document;
+        if (!document.Name.Equals("index"))
+        {
+            OnStoreChanged();
+        }
     }
 }

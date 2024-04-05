@@ -6,6 +6,10 @@ internal class FakeDocumentStore : IDocumentStore
 {
     private readonly List<ProcessedDocument> myDocuments = [];
 
+    public string RootFolder { get; }
+
+    public event Action StoreFilesChanged;
+
     public ProcessedDocument GetPage(string pageName) =>
         myDocuments.Single(x => x.Name == pageName);
 

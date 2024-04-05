@@ -38,8 +38,11 @@ builder.Services.AddSingleton<ISvgCaptionParser, SvgCaptionParser>();
 builder.Services.AddSingleton<ISvgHyperlinkFormatter, SvgHyperlinkFormatter>();
 builder.Services.AddSingleton<SvgProcessor>();
 builder.Services.AddSingleton<FullTextSearch>();
+builder.Services.AddSingleton<IndexObserver>();
 
 var app = builder.Build();
+app.Services.GetService<IndexObserver>();
+
 app.Environment.ContentRootPath = Path.GetDirectoryName(typeof(SvgProcessor).Assembly.Location);
 
 if (app.Environment.IsDevelopment())

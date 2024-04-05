@@ -154,6 +154,17 @@ export default {
             value: s[1]
           }
         })
+    },
+    async attachEventListeners() {
+      this.$refs.svgContainer.querySelectorAll('clickable').forEach(element => {
+        element.addEventListener('click', (event) => {
+          this.handleAction(element)
+        })
+      })
+    },
+    handleAction(element) {
+      const id = element.getAttribute('pageName')
+      this.navigate(id)
     }
   },
   mounted() {
@@ -168,6 +179,9 @@ export default {
     this.pageNames = response.data
 
     this.navigate('index')
+    if (this.selectedPage === 'index') {
+      this.attachEventListeners()
+    }
   }
 }
 </script>

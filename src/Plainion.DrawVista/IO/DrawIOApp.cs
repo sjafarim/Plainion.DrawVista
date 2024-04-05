@@ -1,16 +1,17 @@
 using System.Diagnostics;
+using System.Xml.Linq;
 
 namespace Plainion.DrawVista.IO;
 
-internal class DrawIOApp(DrawIOModel Model) : IDisposable
+public class DrawIOApp(DrawIOModel Model) : IDisposable, IDrawIOApp
 {
-    private static readonly string Executable = Path.Combine(
+    protected static readonly string Executable = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),
          "draw.io", "draw.io.exe");
 
-    private string myFile;
+    protected string myFile;
 
-    public void ExtractSvg(int pageIndex, string svgFile)
+    public virtual XDocument ExtractSvg(int pageIndex, string svgFile)
     {
         SaveModelOnDemand();
 
@@ -18,9 +19,13 @@ internal class DrawIOApp(DrawIOModel Model) : IDisposable
 
         Process.Start(Executable, $"-x {myFile} -o {svgFile} -p {pageIndex}")
             .WaitForExit();
+
+        XDocument svgDocument = XDocument.Load(svgFile);
+
+        return svgDocument;
     }
 
-    private void SaveModelOnDemand()
+    public void SaveModelOnDemand()
     {
         if (myFile != null)
         {
@@ -29,7 +34,7 @@ internal class DrawIOApp(DrawIOModel Model) : IDisposable
 
         // extension ".drawio" is important so that draw.io.exe detects file contents properly
         myFile = Path.GetTempFileName() + ".drawio";
-        
+
         Model.WriteTo(myFile);
     }
 
